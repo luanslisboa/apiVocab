@@ -12,13 +12,15 @@ ltext = []
 # first page
 @app.route('/')
 def index():
-    return "Hello! Send text to: 'site address'/sendText/" \
-           "Get vector from: /response/<ngram>" \
-           "ngram can be 1 or 2" \
+    return "Hello! Send text to: /sendText/<br>" \
+           "Get vector from: /response/ngram<br>" \
+           "ngram can be 1 or 2<br>" \
+           "<br>Use for post: " \
            '<form action="/sendText" method="post">' \
-           '<input type="text" name="text" value="">'\
+           '<input type="text" name="text" value="">' \
            '<input type="submit" value="Send">' \
-           '</form>'
+           '</form>' \
+           '<br>Obs.: One text per time.'
 
 # request
 @app.route('/sendText/', methods=['POST'])
@@ -39,6 +41,8 @@ def response(ngram):
     if ngram is not None:
         for text in ltext:
             vec = tokenize(text, ngram, vec)
+
+        for text in ltext:
             vec = vector(text, vec)
 
         return vec
