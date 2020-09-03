@@ -8,27 +8,23 @@ app = Flask(__name__)
 
 stop = stopwords.words('portuguese')
 ltext = []
-vec = {}
 
-
+# first page
 @app.route('/')
 def index():
-    return "Hello! Send text to: 'site address'/request" \
+    return "Hello! Send text to: 'site address'/sendText/" \
            "Get vector from: /response/<ngram>" \
-           "ngram can be null, 1 or 2"
-
-# test page post
-@app.route('/test')
-def testPost():
-    return '<form action="/sendText" method="post">' \
-           '<input type="text" name="text" value="Falar é fácil. Mostre-me o código.">'\
+           "ngram can be 1 or 2" \
+           '<form action="/sendText" method="post">' \
+           '<input type="text" name="text" value="">'\
            '<input type="submit" value="Send">' \
            '</form>'
 
 # request
-@app.route('/sendText', methods=['POST'])
+@app.route('/sendText/', methods=['POST'])
 def sendText():
-    text = request.form.get('text')
+    text = request.form['text']
+    #text = request.form.get('text')
     text = cleaning(text)
     ltext.append(text)
 
@@ -37,17 +33,24 @@ def sendText():
 # response
 @app.route('/response/<ngram>', methods=['GET'])
 def response(ngram):
-    for text in ltext:
-        tokenize(text, int(ngram))
-        vector(text)
+    ngram = int(ngram)
+    vec = {}
 
-    return vec
+    if ngram is not None:
+        for text in ltext:
+            vec = tokenize(text, ngram, vec)
+            vec = vector(text, vec)
+
+        return vec
+
+    else:
+        return 'error'
 
 # cleaning
 def cleaning(text):
     text = text.lower()
     for p in punctuation:
-        text = text.replace(p,' ')
+        text = text.replace(p, ' ')
     ilist = []
     for w in text.split():
         if w not in stop:
@@ -57,21 +60,26 @@ def cleaning(text):
     return text
 
 # generate token
-def tokenize(text,ngram):
+def tokenize(text, ngram, vec):
     for word in get_ngrams(text, ngram):
         try:
             vec[word] = 0
         except:
             pass
 
-def vector(text):
-    for word in vec:
-        vec[word] += text.count(word)
+    return vec
 
+# separate in grams
 def get_ngrams(text, n ):
     n_grams = ngrams(word_tokenize(text), n)
     return [' '.join(grams) for grams in n_grams]
 
+# count occurrences
+def vector(text, vec):
+    for word in vec:
+        vec[word] += text.count(word)
+
+    return vec
+
 if __name__ == '__main__':
     app.run()
-
